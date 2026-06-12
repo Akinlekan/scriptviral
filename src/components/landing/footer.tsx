@@ -12,11 +12,8 @@ export function Footer() {
                     <span className="font-bold">ScriptViral</span>
                 </div>
                 <div className="flex gap-6 text-sm text-muted-foreground">
-                    <Link href="/signup" className="hover:text-foreground">
-                        Sign up
-                    </Link>
-                    <Link href="/login" className="hover:text-foreground">
-                        Login
+                    <Link href="/dashboard" className="hover:text-foreground">
+                        Generator
                     </Link>
                 </div>
                 <p className="text-sm text-muted-foreground">

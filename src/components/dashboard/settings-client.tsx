@@ -1,73 +1,48 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { useEffect, useState } from "react";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { getUsageCount, getSavedScripts } from "@/lib/local-storage";
 
-interface SettingsClientProps {
-    email: string;
-    usageCount: number;
-}
+export function SettingsClient() {
+    const [usageCount, setUsageCount] = useState(0);
+    const [savedCount, setSavedCount] = useState(0);
 
-export function SettingsClient({ email, usageCount }: SettingsClientProps) {
-    const router = useRouter();
-    const supabase = createClient();
-
-    async function handleSignOut() {
-        await supabase.auth.signOut();
-        router.push("/login");
-        router.refresh();
-    }
+    useEffect(() => {
+        setUsageCount(getUsageCount());
+        setSavedCount(getSavedScripts().length);
+    }, []);
 
     return (
-        <DashboardShell email={email} initialUsageCount={usageCount}>
+        <DashboardShell>
             <div className="mx-auto max-w-2xl space-y-6">
-                <h1 className="text-2xl font-bold">Settings</h1>
+                <h1 className="text-2xl font-bold">About</h1>
 
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-base">Account</CardTitle>
+                        <CardTitle className="text-base">ScriptViral</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div>
-                            <p className="text-sm text-muted-foreground">
-                                Email
-                            </p>
-                            <p className="font-medium">{email}</p>
+                    <CardContent className="space-y-4 text-sm text-muted-foreground">
+                        <p>
+                            Free to use — no signup, no account, no limits.
+                            Generate viral video scripts instantly.
+                        </p>
+                        <p>
+                            Your saved scripts and usage count are stored
+                            locally in this browser. Clearing browser data will
+                            remove them.
+                        </p>
+                        <div className="grid gap-3 rounded-lg border border-border bg-secondary/20 p-4 text-foreground">
+                            <div className="flex justify-between">
+                                <span>Scripts generated</span>
+                                <span className="font-medium">{usageCount}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span>Saved scripts</span>
+                                <span className="font-medium">{savedCount}</span>
+                            </div>
                         </div>
-                        <Separator />
-                        <div>
-                            <p className="text-sm text-muted-foreground">
-                                Plan
-                            </p>
-                            <p className="font-medium text-indigo-400">
-                                Free forever — unlimited generations
-                            </p>
-                        </div>
-                        <Separator />
-                        <div>
-                            <p className="text-sm text-muted-foreground">
-                                Total scripts generated
-                            </p>
-                            <p className="font-medium">{usageCount}</p>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-base">Session</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <Button
-                            variant="destructive"
-                            onClick={handleSignOut}
-                        >
-                            Sign out
-                        </Button>
                     </CardContent>
                 </Card>
             </div>

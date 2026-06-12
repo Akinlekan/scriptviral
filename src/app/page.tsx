@@ -21,19 +21,13 @@ export default function HomePage() {
                     </Link>
                     <div className="flex items-center gap-3">
                         <Link
-                            href="/login"
-                            className={buttonVariants({ variant: "ghost" })}
-                        >
-                            Sign in
-                        </Link>
-                        <Link
-                            href="/signup"
+                            href="/dashboard"
                             className={cn(
                                 buttonVariants(),
                                 "bg-indigo-600 hover:bg-indigo-700"
                             )}
                         >
-                            Start free
+                            Start generating
                         </Link>
                     </div>
                 </div>

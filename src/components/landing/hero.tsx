@@ -25,20 +25,14 @@ export function Hero() {
                 </p>
                 <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
                     <Link
-                        href="/signup"
+                        href="/dashboard"
                         className={cn(
                             buttonVariants({ size: "lg" }),
                             "bg-indigo-600 px-8 hover:bg-indigo-700"
                         )}
                     >
-                        Start free
+                        Start generating
                         <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
-                    <Link
-                        href="/login"
-                        className={buttonVariants({ variant: "outline", size: "lg" })}
-                    >
-                        Sign in
                     </Link>
                 </div>
             </div>

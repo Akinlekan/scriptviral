@@ -15,68 +15,54 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import { Skeleton } from "@/components/ui/skeleton";
 import { GENRE_LABELS } from "@/lib/constants";
-import type { SavedScript, Genre } from "@/types";
+import {
+    deleteScript,
+    getSavedScripts,
+    renameScript,
+    type LocalSavedScript,
+} from "@/lib/local-storage";
+import type { Genre } from "@/types";
 import { toast } from "sonner";
 
-interface SavedScriptsClientProps {
-    email: string;
-    usageCount: number;
-}
-
-export function SavedScriptsClient({
-    email,
-    usageCount,
-}: SavedScriptsClientProps) {
-    const [scripts, setScripts] = useState<SavedScript[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [editing, setEditing] = useState<SavedScript | null>(null);
+export function SavedScriptsClient() {
+    const [scripts, setScripts] = useState<LocalSavedScript[]>([]);
+    const [editing, setEditing] = useState<LocalSavedScript | null>(null);
     const [newTitle, setNewTitle] = useState("");
-    const [viewing, setViewing] = useState<SavedScript | null>(null);
+    const [viewing, setViewing] = useState<LocalSavedScript | null>(null);
 
-    async function loadScripts() {
-        const res = await fetch("/api/scripts");
-        const data = await res.json();
-        setScripts(data);
-        setLoading(false);
+    function loadScripts() {
+        setScripts(getSavedScripts());
     }
 
     useEffect(() => {
         loadScripts();
     }, []);
 
-    async function handleRename() {
+    function handleRename() {
         if (!editing) return;
-        const res = await fetch(`/api/scripts/${editing.id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ title: newTitle }),
-        });
-        if (res.ok) {
-            toast.success("Script renamed");
-            setEditing(null);
-            loadScripts();
-        } else {
-            toast.error("Failed to rename");
-        }
+        renameScript(editing.id, newTitle);
+        toast.success("Script renamed");
+        setEditing(null);
+        loadScripts();
     }
 
-    async function handleDelete(id: string) {
-        const res = await fetch(`/api/scripts/${id}`, { method: "DELETE" });
-        if (res.ok) {
-            toast.success("Script deleted");
-            loadScripts();
-        } else {
-            toast.error("Failed to delete");
-        }
+    function handleDelete(id: string) {
+        deleteScript(id);
+        toast.success("Script deleted");
+        loadScripts();
     }
 
     return (
-        <DashboardShell email={email} initialUsageCount={usageCount}>
+        <DashboardShell>
             <div className="mx-auto max-w-4xl">
                 <div className="mb-6 flex items-center justify-between">
-                    <h1 className="text-2xl font-bold">Saved Scripts</h1>
+                    <div>
+                        <h1 className="text-2xl font-bold">Saved Scripts</h1>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                            Stored in your browser — no account needed
+                        </p>
+                    </div>
                     <Link
                         href="/dashboard"
                         className={cn(
@@ -88,13 +74,7 @@ export function SavedScriptsClient({
                     </Link>
                 </div>
 
-                {loading ? (
-                    <div className="space-y-4">
-                        {[1, 2, 3].map((i) => (
-                            <Skeleton key={i} className="h-24 w-full" />
-                        ))}
-                    </div>
-                ) : scripts.length === 0 ? (
+                {scripts.length === 0 ? (
                     <Card className="border-dashed">
                         <CardContent className="flex flex-col items-center py-12 text-center">
                             <p className="text-muted-foreground">
@@ -158,7 +138,8 @@ export function SavedScriptsClient({
                                 </CardHeader>
                                 <CardContent>
                                     <p className="line-clamp-2 text-sm text-muted-foreground">
-                                        {script.hook || script.script.slice(0, 150)}
+                                        {script.hook ||
+                                            script.script.slice(0, 150)}
                                     </p>
                                 </CardContent>
                             </Card>

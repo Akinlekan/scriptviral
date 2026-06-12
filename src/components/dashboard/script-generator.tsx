@@ -31,6 +31,7 @@ import type {
     VideoLength,
     IncludeOption,
 } from "@/types";
+import { incrementUsageCount } from "@/lib/local-storage";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -97,8 +98,8 @@ export function ScriptGenerator({ onUsageUpdate }: ScriptGeneratorProps) {
 
             setResult(data);
             setMeta({ genre, platform, tone });
-            if (data.totalUsage != null && onUsageUpdate) {
-                onUsageUpdate(data.totalUsage);
+            if (onUsageUpdate) {
+                onUsageUpdate(incrementUsageCount());
             }
             toast.success("Script generated!");
         } catch (error) {

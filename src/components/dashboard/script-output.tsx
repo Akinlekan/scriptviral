@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { GENRE_LABELS, PLATFORM_LABELS } from "@/lib/constants";
+import { saveScript } from "@/lib/local-storage";
 import type { GeneratedScript, Genre, Platform, Tone } from "@/types";
 import { toast } from "sonner";
 
@@ -30,7 +31,7 @@ export function ScriptOutput({
         toast.success(`${label} copied!`);
     }
 
-    async function handleSave() {
+    function handleSave() {
         setSaving(true);
         try {
             const title =
@@ -38,26 +39,17 @@ export function ScriptOutput({
                 result.hook.slice(0, 60) ||
                 "Untitled Script";
 
-            const res = await fetch("/api/scripts", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    title,
-                    genre,
-                    platform,
-                    tone,
-                    hook: result.hook,
-                    script: result.script,
-                    scenes: result.scenes,
-                    titles: result.titles.join("\n"),
-                    caption: result.caption,
-                }),
+            saveScript({
+                title,
+                genre,
+                platform,
+                tone,
+                hook: result.hook,
+                script: result.script,
+                scenes: result.scenes,
+                titles: result.titles.join("\n"),
+                caption: result.caption,
             });
-
-            if (!res.ok) {
-                const data = await res.json();
-                throw new Error(data.error || "Failed to save");
-            }
 
             toast.success("Script saved to library!");
         } catch (error) {

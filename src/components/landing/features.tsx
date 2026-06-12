@@ -41,7 +41,7 @@ const features = [
         icon: Bookmark,
         title: "Saved scripts library",
         description:
-            "Save, rename, and manage all your generated scripts in one place.",
+            "Save, rename, and manage scripts in your browser — no account needed.",
     },
 ];
 

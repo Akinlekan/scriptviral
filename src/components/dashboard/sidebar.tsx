@@ -15,7 +15,7 @@ const navItems = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/dashboard", label: "New Script", icon: PenLine, exact: true },
     { href: "/dashboard/saved", label: "Saved Scripts", icon: Bookmark },
-    { href: "/dashboard/settings", label: "Settings", icon: Settings },
+    { href: "/dashboard/settings", label: "About", icon: Settings },
 ];
 
 export function Sidebar() {
@@ -60,7 +60,7 @@ export function Sidebar() {
                         Free forever
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                        Unlimited script generations
+                        No signup · Unlimited use
                     </p>
                 </div>
             </div>

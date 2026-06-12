@@ -9,12 +9,11 @@ export function FreeBanner() {
                     Free forever
                 </div>
                 <h2 className="text-3xl font-bold sm:text-4xl">
-                    Every feature. No limits. No credit card.
+                    Every feature. No signup. No limits.
                 </h2>
                 <p className="mt-4 text-lg text-muted-foreground">
-                    ScriptViral is completely free — unlimited script
-                    generations, all genres, saved scripts library, and every
-                    output type included.
+                    Open the generator and start creating — no account, no
+                    credit card, all niches and features included.
                 </p>
             </div>
         </section>

@@ -31,9 +31,9 @@ import type {
     VideoLength,
     IncludeOption,
 } from "@/types";
-import { incrementUsageCount } from "@/lib/local-storage";
+import { incrementUsageCount, saveScript, buildSavePayload } from "@/lib/local-storage";
+import { GenerationLoader } from "@/components/dashboard/generation-loader";
 import { toast } from "sonner";
-import { Skeleton } from "@/components/ui/skeleton";
 
 interface ScriptGeneratorProps {
     onUsageUpdate?: (count: number) => void;
@@ -59,6 +59,7 @@ export function ScriptGenerator({ onUsageUpdate }: ScriptGeneratorProps) {
         platform: Platform;
         tone: Tone;
     } | null>(null);
+    const [savedId, setSavedId] = useState<string | null>(null);
 
     function toggleInclude(option: IncludeOption) {
         setInclude((prev) =>
@@ -76,6 +77,7 @@ export function ScriptGenerator({ onUsageUpdate }: ScriptGeneratorProps) {
 
         setLoading(true);
         setResult(null);
+        setSavedId(null);
 
         const payload: GenerateRequest = {
             genre,
@@ -96,12 +98,27 @@ export function ScriptGenerator({ onUsageUpdate }: ScriptGeneratorProps) {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Generation failed");
 
-            setResult(data);
-            setMeta({ genre, platform, tone });
+            const generated = data as GeneratedScript;
+            const metaValues = { genre, platform, tone };
+            setResult(generated);
+            setMeta(metaValues);
             if (onUsageUpdate) {
                 onUsageUpdate(incrementUsageCount());
             }
-            toast.success("Script generated!");
+            const saved = saveScript(buildSavePayload(generated, metaValues));
+            setSavedId(saved.id);
+            toast.success("Script generated and saved!", {
+                description: "Open Saved Scripts to view anytime.",
+                action: {
+                    label: "Open",
+                    onClick: () =>
+                        window.open(
+                            `/dashboard/saved/${saved.id}`,
+                            "_blank",
+                            "noopener,noreferrer"
+                        ),
+                },
+            });
         } catch (error) {
             toast.error(
                 error instanceof Error ? error.message : "Something went wrong"
@@ -238,17 +255,7 @@ export function ScriptGenerator({ onUsageUpdate }: ScriptGeneratorProps) {
                 </CardContent>
             </Card>
 
-            {loading && (
-                <Card className="border-border/50">
-                    <CardContent className="space-y-4 pt-6">
-                        <Skeleton className="h-6 w-1/3" />
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-4 w-2/3" />
-                        <Skeleton className="h-32 w-full" />
-                    </CardContent>
-                </Card>
-            )}
+            {loading && <GenerationLoader />}
 
             {result && meta && !loading && (
                 <ScriptOutput
@@ -256,6 +263,7 @@ export function ScriptGenerator({ onUsageUpdate }: ScriptGeneratorProps) {
                     genre={meta.genre}
                     platform={meta.platform}
                     tone={meta.tone}
+                    savedId={savedId ?? undefined}
                 />
             )}
         </div>

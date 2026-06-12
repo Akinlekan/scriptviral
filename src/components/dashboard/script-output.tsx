@@ -11,7 +11,7 @@ import {
     FREE_VISUAL_TOOLS,
     PRODUCTION_WORKFLOW_STEPS,
 } from "@/lib/production-tools";
-import { saveScript } from "@/lib/local-storage";
+import { saveScript, updateScript, buildSavePayload } from "@/lib/local-storage";
 import { SceneProductionCard } from "@/components/dashboard/scene-production-card";
 import type { GeneratedScript, Genre, Platform, Tone } from "@/types";
 import { toast } from "sonner";
@@ -21,6 +21,8 @@ interface ScriptOutputProps {
     genre: Genre;
     platform: Platform;
     tone: Tone;
+    savedId?: string;
+    showSave?: boolean;
 }
 
 export function ScriptOutput({
@@ -28,6 +30,8 @@ export function ScriptOutput({
     genre,
     platform,
     tone,
+    savedId,
+    showSave = true,
 }: ScriptOutputProps) {
     const [saving, setSaving] = useState(false);
 
@@ -39,24 +43,15 @@ export function ScriptOutput({
     function handleSave() {
         setSaving(true);
         try {
-            const title =
-                result.titles[0] ||
-                result.hook.slice(0, 60) ||
-                "Untitled Script";
-
-            saveScript({
-                title,
-                genre,
-                platform,
-                tone,
-                hook: result.hook,
-                script: result.script,
-                scenes: result.scenes,
-                titles: result.titles.join("\n"),
-                caption: result.caption,
-            });
-
-            toast.success("Script saved to library!");
+            const payload = buildSavePayload(result, { genre, platform, tone });
+            if (savedId) {
+                updateScript(savedId, payload);
+            } else {
+                saveScript(payload);
+            }
+            toast.success(
+                savedId ? "Script updated!" : "Script saved to library!"
+            );
         } catch (error) {
             toast.error(
                 error instanceof Error ? error.message : "Save failed"
@@ -96,15 +91,21 @@ export function ScriptOutput({
                         </Badge>
                     </div>
                 </div>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleSave}
-                    disabled={saving}
-                >
-                    <Save className="mr-2 h-4 w-4" />
-                    {saving ? "Saving..." : "Save script"}
-                </Button>
+                {showSave && (
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleSave}
+                        disabled={saving}
+                    >
+                        <Save className="mr-2 h-4 w-4" />
+                        {saving
+                            ? "Saving..."
+                            : savedId
+                              ? "Update saved script"
+                              : "Save script"}
+                    </Button>
+                )}
             </CardHeader>
             <CardContent>
                 <Tabs defaultValue="create">

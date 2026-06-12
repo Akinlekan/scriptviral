@@ -29,7 +29,6 @@ export function SavedScriptsClient() {
     const [scripts, setScripts] = useState<LocalSavedScript[]>([]);
     const [editing, setEditing] = useState<LocalSavedScript | null>(null);
     const [newTitle, setNewTitle] = useState("");
-    const [viewing, setViewing] = useState<LocalSavedScript | null>(null);
 
     function loadScripts() {
         setScripts(getSavedScripts());
@@ -38,6 +37,14 @@ export function SavedScriptsClient() {
     useEffect(() => {
         loadScripts();
     }, []);
+
+    function openScript(id: string) {
+        window.open(
+            `/dashboard/saved/${id}`,
+            "_blank",
+            "noopener,noreferrer"
+        );
+    }
 
     function handleRename() {
         if (!editing) return;
@@ -60,7 +67,8 @@ export function SavedScriptsClient() {
                     <div>
                         <h1 className="text-2xl font-bold">Saved Scripts</h1>
                         <p className="mt-1 text-sm text-muted-foreground">
-                            Stored in your browser — no account needed
+                            Full scripts, production guides, and prompts —
+                            stored in your browser
                         </p>
                     </div>
                     <Link
@@ -91,9 +99,13 @@ export function SavedScriptsClient() {
                 ) : (
                     <div className="space-y-4">
                         {scripts.map((script) => (
-                            <Card key={script.id}>
+                            <Card
+                                key={script.id}
+                                className="cursor-pointer transition-colors hover:border-indigo-500/40"
+                                onClick={() => openScript(script.id)}
+                            >
                                 <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-                                    <div>
+                                    <div className="min-w-0 flex-1 pr-4">
                                         <CardTitle className="text-base">
                                             {script.title}
                                         </CardTitle>
@@ -102,16 +114,23 @@ export function SavedScriptsClient() {
                                                 script.genre as Genre
                                             ] ?? script.genre}{" "}
                                             ·{" "}
+                                            {script.scenes.length} scenes ·{" "}
                                             {new Date(
                                                 script.created_at
                                             ).toLocaleDateString()}
                                         </p>
                                     </div>
-                                    <div className="flex gap-1">
+                                    <div
+                                        className="flex shrink-0 gap-1"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            onClick={() => setViewing(script)}
+                                            title="Open in new tab"
+                                            onClick={() =>
+                                                openScript(script.id)
+                                            }
                                         >
                                             <ExternalLink className="h-4 w-4" />
                                         </Button>
@@ -141,6 +160,12 @@ export function SavedScriptsClient() {
                                         {script.hook ||
                                             script.script.slice(0, 150)}
                                     </p>
+                                    {script.productionGuide && (
+                                        <p className="mt-2 text-xs text-indigo-400/80">
+                                            Includes production guide & scene
+                                            prompts
+                                        </p>
+                                    )}
                                 </CardContent>
                             </Card>
                         ))}
@@ -161,44 +186,6 @@ export function SavedScriptsClient() {
                     <Button onClick={handleRename} className="mt-2">
                         Save
                     </Button>
-                </DialogContent>
-            </Dialog>
-
-            <Dialog open={!!viewing} onOpenChange={() => setViewing(null)}>
-                <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle>{viewing?.title}</DialogTitle>
-                    </DialogHeader>
-                    {viewing && (
-                        <div className="space-y-4 text-sm">
-                            {viewing.hook && (
-                                <div>
-                                    <h4 className="font-semibold text-indigo-400">
-                                        Hook
-                                    </h4>
-                                    <p className="mt-1 whitespace-pre-wrap">
-                                        {viewing.hook}
-                                    </p>
-                                </div>
-                            )}
-                            {viewing.script && (
-                                <div>
-                                    <h4 className="font-semibold">Script</h4>
-                                    <p className="mt-1 whitespace-pre-wrap">
-                                        {viewing.script}
-                                    </p>
-                                </div>
-                            )}
-                            {viewing.caption && (
-                                <div>
-                                    <h4 className="font-semibold">Caption</h4>
-                                    <p className="mt-1 whitespace-pre-wrap">
-                                        {viewing.caption}
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-                    )}
                 </DialogContent>
             </Dialog>
         </DashboardShell>

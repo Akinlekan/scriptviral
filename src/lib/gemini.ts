@@ -47,9 +47,25 @@ Target length: ${lengthGuide}
 Generate ALL of the following in order (include: ${includeList}):
 HOOK: [1-3 sentence scroll-stopping hook]
 SCRIPT: [full narration with pacing notes like [pause] [lower voice]]
-SCENE 1: [visual description] | PROMPT: [cinematic AI video prompt with camera angle, lighting, subject, action, mood]
-SCENE 2: [visual description] | PROMPT: [...]
-... (6-12 scenes total)
+
+For each scene (6-12 total), use EXACTLY this multi-line format:
+SCENE 1:
+VISUAL: [what the viewer sees — subject, setting, action]
+VIDEO PROMPT: [detailed AI video prompt: camera angle, lens, lighting, subject, action, mood, color palette — ready to paste into Runway/Pika]
+IMAGE PROMPT: [detailed AI still-image prompt matching the scene — ready to paste into Leonardo/Canva/Midjourney]
+DURATION: [suggested clip length e.g. "4 sec" — must match narration pacing]
+HOW TO CREATE: [2-3 sentences: which free tool to use, exact steps, aspect ratio 9:16 or 16:9 based on platform, and how to match narration]
+
+SCENE 2:
+VISUAL: ...
+VIDEO PROMPT: ...
+IMAGE PROMPT: ...
+DURATION: ...
+HOW TO CREATE: ...
+
+PRODUCTION GUIDE:
+[5-7 numbered steps telling the user exactly how to assemble the final video: generate all clips → import to CapCut → record narration from SCRIPT → sync clips to narration beats → add captions → export settings for their platform]
+
 TITLES: [5 viral title options, one per line, numbered 1-5]
 CAPTION: [social caption + 10 hashtags]
 
@@ -57,9 +73,11 @@ Rules:
 - Never start the hook with "In" or "Today"
 - Punchy, short sentences
 - Real emotional beats
-- Video prompts must be specific: camera angle, lighting, subject, action, mood, color palette
+- VIDEO PROMPT and IMAGE PROMPT must be copy-paste ready for AI tools
+- HOW TO CREATE must mention specific free tools (Pika, Runway, Leonardo, CapCut)
+- PRODUCTION GUIDE must be actionable for a beginner with no filming experience
 - Feel like a real human story, not AI-generated
-- Use the exact labels HOOK:, SCRIPT:, SCENE N:, PROMPT:, TITLES:, CAPTION:`;
+- Use the exact labels HOOK:, SCRIPT:, SCENE N:, VISUAL:, VIDEO PROMPT:, IMAGE PROMPT:, DURATION:, HOW TO CREATE:, PRODUCTION GUIDE:, TITLES:, CAPTION:`;
 }
 
 export async function generateScriptText(

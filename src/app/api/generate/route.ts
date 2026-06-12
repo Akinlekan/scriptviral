@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { generateScriptText } from "@/lib/gemini";
-import { parseScriptResponse } from "@/lib/parse-script";
+import { parseScriptResponse, normalizeScenes } from "@/lib/parse-script";
 import type { GenerateRequest } from "@/types";
 
 export async function POST(request: Request) {
@@ -16,6 +16,7 @@ export async function POST(request: Request) {
 
         const raw = await generateScriptText(body);
         const parsed = parseScriptResponse(raw);
+        parsed.scenes = normalizeScenes(parsed.scenes);
 
         return NextResponse.json(parsed);
     } catch (error) {

@@ -36,7 +36,7 @@ export const VIDEO_LENGTHS: { value: VideoLength; label: string }[] = [
 export const INCLUDE_OPTIONS: { value: IncludeOption; label: string }[] = [
     { value: "hook", label: "Hook" },
     { value: "full_script", label: "Full narration script" },
-    { value: "scene_prompts", label: "Scene-by-scene video prompts" },
+    { value: "scene_prompts", label: "Scene-by-scene production guide" },
     { value: "titles", label: "5 viral title ideas" },
     { value: "caption", label: "Social media caption" },
 ];

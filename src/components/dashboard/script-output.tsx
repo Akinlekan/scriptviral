@@ -1,13 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Copy, Save } from "lucide-react";
+import { Copy, Save, Clapperboard, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { GENRE_LABELS, PLATFORM_LABELS } from "@/lib/constants";
+import {
+    FREE_VISUAL_TOOLS,
+    PRODUCTION_WORKFLOW_STEPS,
+} from "@/lib/production-tools";
 import { saveScript } from "@/lib/local-storage";
+import { SceneProductionCard } from "@/components/dashboard/scene-production-card";
 import type { GeneratedScript, Genre, Platform, Tone } from "@/types";
 import { toast } from "sonner";
 
@@ -61,6 +66,24 @@ export function ScriptOutput({
         }
     }
 
+    function copyAllVideoPrompts() {
+        const text = result.scenes
+            .map((s) => {
+                const vp = s.videoPrompt || s.prompt || "";
+                return `Scene ${s.sceneNumber} (${s.duration}):\n${vp}`;
+            })
+            .join("\n\n");
+        copyText(text, "All video prompts");
+    }
+
+    const productionSteps =
+        result.productionGuide.trim().length > 0
+            ? result.productionGuide
+                  .split(/\n+/)
+                  .map((s) => s.trim())
+                  .filter(Boolean)
+            : PRODUCTION_WORKFLOW_STEPS;
+
     return (
         <Card className="border-border/50 bg-card/80">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
@@ -84,12 +107,81 @@ export function ScriptOutput({
                 </Button>
             </CardHeader>
             <CardContent>
-                <Tabs defaultValue="script">
-                    <TabsList className="mb-4">
+                <Tabs defaultValue="create">
+                    <TabsList className="mb-4 flex h-auto flex-wrap gap-1">
+                        <TabsTrigger value="create">Create video</TabsTrigger>
                         <TabsTrigger value="script">Script</TabsTrigger>
-                        <TabsTrigger value="prompts">Video prompts</TabsTrigger>
                         <TabsTrigger value="titles">Titles & caption</TabsTrigger>
                     </TabsList>
+
+                    <TabsContent value="create" className="space-y-4">
+                        <div className="rounded-lg border border-indigo-500/30 bg-indigo-600/10 p-4">
+                            <div className="mb-2 flex items-center gap-2">
+                                <Clapperboard className="h-5 w-5 text-indigo-400" />
+                                <h3 className="font-semibold text-indigo-400">
+                                    How to turn this into a finished video
+                                </h3>
+                            </div>
+                            <ol className="list-inside list-decimal space-y-2 text-sm leading-relaxed">
+                                {productionSteps.map((step, i) => (
+                                    <li key={i}>
+                                        {step.replace(/^\d+[\.\)]\s*/, "")}
+                                    </li>
+                                ))}
+                            </ol>
+                        </div>
+
+                        <div className="rounded-lg border border-border bg-secondary/20 p-4">
+                            <p className="mb-3 text-sm font-semibold">
+                                Free tools to use
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                                {FREE_VISUAL_TOOLS.map((tool) => (
+                                    <a
+                                        key={tool.name}
+                                        href={tool.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-3 py-1.5 text-xs transition-colors hover:border-indigo-500/50 hover:text-indigo-400"
+                                    >
+                                        {tool.name}
+                                        <span className="text-muted-foreground">
+                                            · {tool.use}
+                                        </span>
+                                        <ExternalLink className="h-3 w-3 opacity-50" />
+                                    </a>
+                                ))}
+                            </div>
+                        </div>
+
+                        {result.scenes.length > 0 && (
+                            <div className="flex justify-end">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={copyAllVideoPrompts}
+                                >
+                                    <Copy className="mr-2 h-4 w-4" />
+                                    Copy all video prompts
+                                </Button>
+                            </div>
+                        )}
+
+                        {result.scenes.length === 0 ? (
+                            <p className="text-sm text-muted-foreground">
+                                No scene production guide generated. Make sure
+                                &quot;Scene-by-scene video prompts&quot; is
+                                selected in Include.
+                            </p>
+                        ) : (
+                            result.scenes.map((scene) => (
+                                <SceneProductionCard
+                                    key={scene.sceneNumber}
+                                    scene={scene}
+                                />
+                            ))
+                        )}
+                    </TabsContent>
 
                     <TabsContent value="script" className="space-y-4">
                         {result.hook && (
@@ -129,55 +221,15 @@ export function ScriptOutput({
                                         <Copy className="h-4 w-4" />
                                     </Button>
                                 </div>
+                                <p className="mb-2 text-xs text-muted-foreground">
+                                    Record this voiceover in CapCut or your
+                                    phone — sync each line to the matching
+                                    scene clip above.
+                                </p>
                                 <p className="whitespace-pre-wrap text-sm leading-relaxed">
                                     {result.script}
                                 </p>
                             </div>
-                        )}
-                    </TabsContent>
-
-                    <TabsContent value="prompts" className="space-y-4">
-                        {result.scenes.length === 0 ? (
-                            <p className="text-sm text-muted-foreground">
-                                No scene prompts generated.
-                            </p>
-                        ) : (
-                            result.scenes.map((scene) => (
-                                <div
-                                    key={scene.sceneNumber}
-                                    className="rounded-lg border border-border bg-secondary/20 p-4"
-                                >
-                                    <div className="mb-2 flex items-center justify-between">
-                                        <h3 className="text-sm font-semibold text-indigo-400">
-                                            Scene {scene.sceneNumber}
-                                        </h3>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() =>
-                                                copyText(
-                                                    `Visual: ${scene.description}\n\nPrompt: ${scene.prompt}`,
-                                                    `Scene ${scene.sceneNumber}`
-                                                )
-                                            }
-                                        >
-                                            <Copy className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                    <p className="mb-2 text-sm">
-                                        <span className="font-medium">
-                                            Visual:{" "}
-                                        </span>
-                                        {scene.description}
-                                    </p>
-                                    <p className="text-sm text-muted-foreground">
-                                        <span className="font-medium text-foreground">
-                                            AI Prompt:{" "}
-                                        </span>
-                                        {scene.prompt}
-                                    </p>
-                                </div>
-                            ))
                         )}
                     </TabsContent>
 

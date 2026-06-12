@@ -31,7 +31,21 @@ export type IncludeOption =
 export interface SceneBlock {
     sceneNumber: number;
     description: string;
-    prompt: string;
+    /** @deprecated use videoPrompt — kept for saved scripts compatibility */
+    prompt?: string;
+    videoPrompt: string;
+    imagePrompt: string;
+    duration: string;
+    howToCreate: string;
+}
+
+export interface GeneratedScript {
+    hook: string;
+    script: string;
+    scenes: SceneBlock[];
+    titles: string[];
+    caption: string;
+    productionGuide: string;
 }
 
 export interface GenerateRequest {
@@ -41,14 +55,6 @@ export interface GenerateRequest {
     videoLength: VideoLength;
     topic?: string;
     include: IncludeOption[];
-}
-
-export interface GeneratedScript {
-    hook: string;
-    script: string;
-    scenes: SceneBlock[];
-    titles: string[];
-    caption: string;
 }
 
 export interface SavedScript {

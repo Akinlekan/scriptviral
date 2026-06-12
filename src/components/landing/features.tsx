@@ -27,9 +27,9 @@ const features = [
     },
     {
         icon: Clapperboard,
-        title: "Scene-by-scene prompts",
+        title: "Scene production guide",
         description:
-            "Cinematic AI video prompts with camera angles, lighting, and mood for each scene.",
+            "Per-scene video & image prompts, durations, and step-by-step instructions to assemble your final video.",
     },
     {
         icon: Hash,

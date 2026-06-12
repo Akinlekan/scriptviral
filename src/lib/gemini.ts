@@ -7,6 +7,15 @@ import {
 } from "@/lib/constants";
 import type { GenerateRequest } from "@/types";
 
+/** Free-tier models, best options first (avoid gemini-2.0-flash — often 0 quota). */
+const MODEL_FALLBACK_CHAIN = [
+    "gemini-2.5-flash-lite",
+    "gemini-2.5-flash",
+    "gemini-1.5-flash",
+    "gemini-2.0-flash-lite",
+    "gemini-1.5-flash-8b",
+] as const;
+
 function getToneLabel(tone: GenerateRequest["tone"]): string {
     return TONES.find((t) => t.value === tone)?.label ?? tone;
 }
@@ -80,6 +89,53 @@ Rules:
 - Use the exact labels HOOK:, SCRIPT:, SCENE N:, VISUAL:, VIDEO PROMPT:, IMAGE PROMPT:, DURATION:, HOW TO CREATE:, PRODUCTION GUIDE:, TITLES:, CAPTION:`;
 }
 
+function getModelChain(): string[] {
+    const preferred = process.env.GEMINI_MODEL?.trim();
+    if (!preferred) return [...MODEL_FALLBACK_CHAIN];
+    return [
+        preferred,
+        ...MODEL_FALLBACK_CHAIN.filter((m) => m !== preferred),
+    ];
+}
+
+function isRetryableError(message: string): boolean {
+    return (
+        message.includes("429") ||
+        message.includes("503") ||
+        message.includes("quota") ||
+        message.includes("Quota exceeded") ||
+        message.includes("RESOURCE_EXHAUSTED") ||
+        message.includes("not found") ||
+        message.includes("404")
+    );
+}
+
+function parseRetrySeconds(message: string): number {
+    const match = message.match(/retry in (\d+(?:\.\d+)?)s/i);
+    if (match) return Math.ceil(parseFloat(match[1]));
+    const delayMatch = message.match(/"retryDelay":"(\d+)s"/);
+    if (delayMatch) return parseInt(delayMatch[1], 10);
+    return 35;
+}
+
+function sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function tryGenerate(
+    genAI: GoogleGenerativeAI,
+    modelName: string,
+    prompt: string
+): Promise<string> {
+    const model = genAI.getGenerativeModel({ model: modelName });
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+    if (!text?.trim()) {
+        throw new Error(`Empty response from ${modelName}`);
+    }
+    return text;
+}
+
 export async function generateScriptText(
     input: GenerateRequest
 ): Promise<string> {
@@ -89,14 +145,44 @@ export async function generateScriptText(
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     const prompt = buildPrompt(input);
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
+    const models = getModelChain();
+    const failures: string[] = [];
 
-    if (!text) {
-        throw new Error("Empty response from AI model");
+    for (let i = 0; i < models.length; i++) {
+        const modelName = models[i];
+        try {
+            return await tryGenerate(genAI, modelName, prompt);
+        } catch (error) {
+            const message =
+                error instanceof Error ? error.message : String(error);
+            failures.push(`${modelName}: ${message.slice(0, 120)}`);
+            console.warn(`Gemini model ${modelName} failed:`, message);
+
+            if (!isRetryableError(message)) {
+                throw error;
+            }
+
+            const isLast = i === models.length - 1;
+            if (isLast && message.includes("429")) {
+                const waitSec = parseRetrySeconds(message);
+                await sleep(Math.min(waitSec * 1000, 45000));
+                try {
+                    return await tryGenerate(genAI, modelName, prompt);
+                } catch (retryError) {
+                    const retryMsg =
+                        retryError instanceof Error
+                            ? retryError.message
+                            : String(retryError);
+                    failures.push(`${modelName} (retry): ${retryMsg.slice(0, 120)}`);
+                }
+            }
+        }
     }
 
-    return text;
+    throw new Error(
+        "AI rate limit reached on all free models. Wait 1–2 minutes and try again, " +
+            "or create a new API key at https://aistudio.google.com/apikey (new Google Cloud project = fresh quota). " +
+            `Tried: ${models.join(", ")}`
+    );
 }
